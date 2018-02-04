@@ -2,6 +2,7 @@ package views
 
 import (
 	"github.com/hjkelly/budget-category-service/categories"
+	"github.com/hjkelly/budget-category-service/common"
 	"net/http"
 )
 
@@ -30,8 +31,14 @@ func CreateCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenSub, err := common.GetAuth().GetSub(r)
+	if err != nil {
+		sendServerError(w, err, "couldn't get sub claim from token") // TODO: parse error?
+		return
+	}
+
 	// If all has gone well, convert it to a category proper and create it.
-	result, err := categories.Create(categories.NewCategory(catInput.Name, catInput.Type, "")) // TODO: actual user ID
+	result, err := categories.Create(categories.NewCategory(catInput.Name, catInput.Type, tokenSub))
 	if err != nil {
 		sendServerError(w, err, "couldn't create the category using its controller")
 		return
